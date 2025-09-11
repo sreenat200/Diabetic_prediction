@@ -18,14 +18,33 @@ import io
 # Set page configuration
 st.set_page_config(page_title="Diabetes Prediction App", layout="wide")
 
-# Load the dataset
+# Load the dataset from GitHub URL
 @st.cache_data
 def load_data():
     try:
-        data = pd.read_csv(r"C:\Users\sreen\OneDrive\Desktop\techmind\diabetes.csv")
+        # Define column names for the diabetes dataset
+        columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 
+                   'DiabetesPedigreeFunction', 'Age', 'Outcome']
+        # Load from raw GitHub URL, treating first row as header
+        url = "https://raw.githubusercontent.com/sreenat200/Diabetic_prediction/0e46abc455417092c9776719b322e5a13fc871f4/diabetes.csv"
+        data = pd.read_csv(url, names=columns, delimiter=',', header=0, skipinitialspace=True, on_bad_lines='skip')
+        # Ensure numeric data
+        for col in columns:
+            data[col] = pd.to_numeric(data[col], errors='coerce')
         return data
     except Exception as e:
-        st.error(f"Error loading file: {e}")
+        st.error(f"Error loading file from GitHub: {e}")
+        # Fallback: Allow user to upload a local CSV
+        st.write("Please upload a local diabetes.csv file as a fallback.")
+        uploaded_file = st.file_uploader("Upload diabetes.csv", type=["csv"])
+        if uploaded_file:
+            try:
+                data = pd.read_csv(uploaded_file, names=columns, delimiter=',', header=0, skipinitialspace=True, on_bad_lines='skip')
+                for col in columns:
+                    data[col] = pd.to_numeric(data[col], errors='coerce')
+                return data
+            except Exception as e2:
+                st.error(f"Error loading uploaded file: {e2}")
         return None
 
 # Preprocess the data
@@ -160,22 +179,30 @@ def main():
     
     for feature in input_features:
         if feature in ['Pregnancies', 'Age']:
-            input_data[feature] = st.sidebar.slider(
-                feature,
-                min_value=int(data[feature].min()),
-                max_value=int(data[feature].max()),
-                value=int(data[feature].median()),
-                key=f"{feature}_input"
-            )
+            try:
+                input_data[feature] = st.sidebar.slider(
+                    feature,
+                    min_value=int(data[feature].min()),
+                    max_value=int(data[feature].max()),
+                    value=int(data[feature].median()),
+                    key=f"{feature}_input"
+                )
+            except ValueError as e:
+                st.error(f"Error processing {feature}: {e}. Please check the dataset for non-numeric values.")
+                return
         else:
-            input_data[feature] = st.sidebar.number_input(
-                feature,
-                min_value=float(data[feature].min()),
-                max_value=float(data[feature].max()),
-                value=float(data[feature].median()),
-                step=0.1,
-                key=f"{feature}_input"
-            )
+            try:
+                input_data[feature] = st.sidebar.number_input(
+                    feature,
+                    min_value=float(data[feature].min()),
+                    max_value=float(data[feature].max()),
+                    value=float(data[feature].median()),
+                    step=0.1,
+                    key=f"{feature}_input"
+                )
+            except ValueError as e:
+                st.error(f"Error processing {feature}: {e}. Please check the dataset for non-numeric values.")
+                return
 
     # Feature selection tab
     tab1, tab2, tab3 = st.tabs(["Prediction", "Feature Selection", "Visualizations"])
