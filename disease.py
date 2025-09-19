@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, auc
 import xgboost as xgb
@@ -77,8 +76,6 @@ def train_model(X, y, algorithm):
     
     if algorithm == "Random Forest":
         model = RandomForestClassifier(n_estimators=100, random_state=42)
-    elif algorithm == "Logistic Regression":
-        model = LogisticRegression(random_state=42)
     elif algorithm == "Gradient Boosting":
         model = GradientBoostingClassifier(n_estimators=100, random_state=42)
     elif algorithm == "XGBoost":
@@ -94,8 +91,6 @@ def train_model(X, y, algorithm):
     
     if algorithm in ["Random Forest", "Gradient Boosting", "XGBoost"]:
         feature_importance = model.feature_importances_
-    else:
-        feature_importance = np.abs(model.coef_[0]) / np.abs(model.coef_[0]).sum()
     
     return model, accuracy, precision, recall, f1, feature_importance, X_test, y_test, y_pred
 
@@ -172,7 +167,7 @@ def main():
 
     # Sidebar for user input
     st.sidebar.header("🩺 Input Features")
-    algorithm = st.sidebar.selectbox("Select Algorithm", ["Random Forest", "Logistic Regression", "Gradient Boosting", "XGBoost"])
+    algorithm = st.sidebar.selectbox("Select Algorithm", ["Random Forest", "Gradient Boosting", "XGBoost"])
     
     input_data = {}
     input_features = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
